@@ -137,7 +137,7 @@ export const sendInvoiceEmail = createAsyncThunk(
     'invoices/sendInvoiceEmail',
     async (invoiceId: string, { rejectWithValue }) => {
         try {
-            const response = await api.post(`/invoices/${invoiceId}/send-email`, {}, { timeout: 30000 });
+            const response = await api.post(`/invoices/${invoiceId}/send-email`, {}, { timeout: 300000 });
             const data = response.data;
 
             if (!data.success) {
