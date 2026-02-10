@@ -1,27 +1,4 @@
-import nodemailer from 'nodemailer';
-
-// Email configuration interface
-interface EmailConfig {
-    host: string;
-    port: number;
-    secure: boolean;
-    auth: {
-        user: string;
-        pass: string;
-    };
-}
-
-// Email options interface
-interface SendEmailOptions {
-    to: string | string[];
-    subject: string;
-    html: string;
-    attachments?: {
-        filename: string;
-        content: Buffer;
-        contentType: string;
-    }[];
-}
+import { Resend } from 'resend';
 
 // Company info for emails
 const COMPANY_INFO = {
@@ -29,19 +6,18 @@ const COMPANY_INFO = {
     internalEmail: 'holly@oysterpondsshellfish.com',
 };
 
-// Create transporter (configure with env variables)
-const createTransporter = () => {
-    const config: EmailConfig = {
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT || '587', 10),
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: {
-            user: process.env.SMTP_USER || '',
-            pass: process.env.SMTP_PASS || '',
-        },
-    };
+// Initialize Resend client
+const getResendClient = (): Resend => {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+        throw new Error('RESEND_API_KEY environment variable is not set');
+    }
+    return new Resend(apiKey);
+};
 
-    return nodemailer.createTransport(config);
+// The "from" address - must be a verified domain in Resend, or use onboarding address
+const getFromAddress = (): string => {
+    return process.env.RESEND_FROM_EMAIL || 'Oysterponds Shellfish Co. <onboarding@resend.dev>';
 };
 
 // Generate invoice email HTML
@@ -158,7 +134,7 @@ const generateInvoiceEmailHTML = (invoiceData: {
     `;
 };
 
-// Send invoice email
+// Send invoice email via Resend
 export const sendInvoiceEmail = async (
     recipientEmails: string[],
     invoiceData: {
@@ -170,28 +146,27 @@ export const sendInvoiceEmail = async (
     pdfBuffer: Buffer,
     shippingTagBuffer?: Buffer
 ): Promise<{ success: boolean; sentTo: string[]; error?: string }> => {
-    // Check if SMTP is configured
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        console.warn('SMTP not configured. Email not sent.');
+    // Check if Resend is configured
+    if (!process.env.RESEND_API_KEY) {
+        console.warn('Resend not configured. Email not sent.');
         return {
             success: false,
             sentTo: [],
-            error: 'SMTP not configured. Please set SMTP_USER and SMTP_PASS environment variables.',
+            error: 'Email not configured. Please set RESEND_API_KEY environment variable.',
         };
     }
 
     try {
-        const transporter = createTransporter();
+        const resend = getResendClient();
 
         // Always include internal email
         const allRecipients = [...new Set([...recipientEmails, COMPANY_INFO.internalEmail])];
 
         // Build attachments array
-        const attachments: { filename: string; content: Buffer; contentType: string }[] = [
+        const attachments: { filename: string; content: Buffer }[] = [
             {
                 filename: `${invoiceData.invoiceNumber}.pdf`,
                 content: pdfBuffer,
-                contentType: 'application/pdf',
             },
         ];
 
@@ -200,21 +175,25 @@ export const sendInvoiceEmail = async (
             attachments.push({
                 filename: `${invoiceData.invoiceNumber}-ShippingTag.pdf`,
                 content: shippingTagBuffer,
-                contentType: 'application/pdf',
             });
         }
 
-        const mailOptions: SendEmailOptions = {
+        const { error } = await resend.emails.send({
+            from: getFromAddress(),
             to: allRecipients,
             subject: `Invoice ${invoiceData.invoiceNumber} - ${invoiceData.customerName} - Oysterponds Shellfish Co.`,
             html: generateInvoiceEmailHTML(invoiceData),
             attachments,
-        };
-
-        await transporter.sendMail({
-            from: `"Oysterponds Shellfish Co." <${process.env.SMTP_USER}>`,
-            ...mailOptions,
         });
+
+        if (error) {
+            console.error('Resend error:', error);
+            return {
+                success: false,
+                sentTo: [],
+                error: error.message || 'Failed to send email via Resend',
+            };
+        }
 
         console.log(`Invoice email sent to: ${allRecipients.join(', ')}${shippingTagBuffer ? ' (with shipping tag)' : ''}`);
 
