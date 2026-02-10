@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import api from '../../services/api';
 import { IInvoice, CreateInvoiceForm, CompanyInfo } from '../../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -41,8 +42,8 @@ export const fetchInvoices = createAsyncThunk(
             if (params?.status) queryParams.append('status', params.status);
             if (params?.page) queryParams.append('page', params.page.toString());
 
-            const response = await fetch(`${API_URL}/invoices?${queryParams}`);
-            const data = await response.json();
+            const response = await api.get(`/invoices?${queryParams}`);
+            const data = response.data;
 
             if (!data.success) {
                 return rejectWithValue(data.message || 'Failed to fetch invoices');
@@ -60,8 +61,8 @@ export const fetchInvoiceByOrder = createAsyncThunk(
     'invoices/fetchInvoiceByOrder',
     async (orderId: string, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${API_URL}/invoices/order/${orderId}`);
-            const data = await response.json();
+            const response = await api.get(`/invoices/order/${orderId}`);
+            const data = response.data;
 
             if (!data.success) {
                 return rejectWithValue(data.message || 'Failed to fetch invoice');
@@ -79,8 +80,8 @@ export const fetchCompanyInfo = createAsyncThunk(
     'invoices/fetchCompanyInfo',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${API_URL}/invoices/company-info`);
-            const data = await response.json();
+            const response = await api.get(`/invoices/company-info`);
+            const data = response.data;
 
             if (!data.success) {
                 return rejectWithValue(data.message || 'Failed to fetch company info');
@@ -98,12 +99,8 @@ export const createInvoice = createAsyncThunk(
     'invoices/createInvoice',
     async (invoiceData: CreateInvoiceForm, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${API_URL}/invoices`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(invoiceData),
-            });
-            const data = await response.json();
+            const response = await api.post(`/invoices`, invoiceData);
+            const data = response.data;
 
             if (!data.success) {
                 return rejectWithValue(data.message || 'Failed to create invoice');
@@ -121,12 +118,8 @@ export const updateInvoice = createAsyncThunk(
     'invoices/updateInvoice',
     async ({ id, updates }: { id: string; updates: Partial<IInvoice> }, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${API_URL}/invoices/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updates),
-            });
-            const data = await response.json();
+            const response = await api.put(`/invoices/${id}`, updates);
+            const data = response.data;
 
             if (!data.success) {
                 return rejectWithValue(data.message || 'Failed to update invoice');
@@ -144,11 +137,8 @@ export const sendInvoiceEmail = createAsyncThunk(
     'invoices/sendInvoiceEmail',
     async (invoiceId: string, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${API_URL}/invoices/${invoiceId}/send-email`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-            const data = await response.json();
+            const response = await api.post(`/invoices/${invoiceId}/send-email`);
+            const data = response.data;
 
             if (!data.success) {
                 return rejectWithValue(data.message || 'Failed to send invoice email');
@@ -166,13 +156,9 @@ export const markInvoiceAsPaid = createAsyncThunk(
     'invoices/markInvoiceAsPaid',
     async ({ invoiceId, checkNumber, paidAt }: { invoiceId: string; checkNumber?: string; paidAt?: string }, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${API_URL}/invoices/${invoiceId}/mark-paid`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ checkNumber, paidAt }),
-            });
+            const response = await api.put(`/invoices/${invoiceId}/mark-paid`, { checkNumber, paidAt });
 
-            const data = await response.json();
+            const data = response.data;
             if (!data.success) {
                 return rejectWithValue(data.error || 'Failed to mark invoice as paid');
             }
@@ -186,7 +172,8 @@ export const markInvoiceAsPaid = createAsyncThunk(
 
 // Download invoice PDF (returns URL)
 export const getInvoicePDFUrl = (invoiceId: string): string => {
-    return `${API_URL}/invoices/${invoiceId}/pdf`;
+    const token = localStorage.getItem('token');
+    return `${API_URL}/invoices/${invoiceId}/pdf?token=${token}`;
 };
 
 const invoicesSlice = createSlice({

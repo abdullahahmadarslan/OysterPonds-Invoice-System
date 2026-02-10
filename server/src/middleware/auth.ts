@@ -11,12 +11,18 @@ export interface AuthRequest extends Request {
 
 export const authenticate = (req: AuthRequest, _res: Response, next: NextFunction): void => {
     const authHeader = req.headers.authorization;
+    let token: string | undefined;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new AppError('Access denied. No token provided.', 401);
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+    } else if (req.query.token && typeof req.query.token === 'string') {
+        // Fallback: token via query parameter (for PDF downloads via window.open)
+        token = req.query.token;
     }
 
-    const token = authHeader.split(' ')[1];
+    if (!token) {
+        throw new AppError('Access denied. No token provided.', 401);
+    }
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: string };
