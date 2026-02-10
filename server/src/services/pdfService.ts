@@ -414,7 +414,21 @@ export const generateInvoicePDF = async (invoiceData: InvoiceData): Promise<Buff
 
     const browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-gpu',
+            '--disable-dev-shm-usage',
+            '--disable-software-rasterizer',
+            '--single-process',
+            '--no-zygote',
+            '--disable-extensions',
+            '--disable-background-networking',
+            '--disable-default-apps',
+            '--disable-sync',
+            '--disable-translate',
+            '--no-first-run',
+        ],
         ...(process.env.PUPPETEER_EXECUTABLE_PATH && {
             executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
         }),
@@ -628,7 +642,21 @@ export const generateShippingTagPDF = async (tagData: ShippingTagData): Promise<
 
     const browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-gpu',
+            '--disable-dev-shm-usage',
+            '--disable-software-rasterizer',
+            '--single-process',
+            '--no-zygote',
+            '--disable-extensions',
+            '--disable-background-networking',
+            '--disable-default-apps',
+            '--disable-sync',
+            '--disable-translate',
+            '--no-first-run',
+        ],
         ...(process.env.PUPPETEER_EXECUTABLE_PATH && {
             executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
         }),
