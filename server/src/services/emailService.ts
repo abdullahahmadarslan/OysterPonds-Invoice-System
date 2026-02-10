@@ -161,6 +161,7 @@ export const sendInvoiceEmail = async (
 
         // Always include internal email
         // TODO: Remove this override after domain verification on Resend
+        console.log('Original recipients (overridden for testing):', recipientEmails);
         const allRecipients = ['abdullah.ahmad.arslan125@gmail.com'];
 
         // Build attachments array
