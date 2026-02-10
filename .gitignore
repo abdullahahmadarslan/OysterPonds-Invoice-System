@@ -21,9 +21,8 @@ server/.env
 *.log
 Thumbs.db
 
-# Docker
-.dockerignore
-Dockerfile
+
+
 
 # Testing
 client/coverage/
