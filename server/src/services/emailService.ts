@@ -160,7 +160,8 @@ export const sendInvoiceEmail = async (
         const resend = getResendClient();
 
         // Always include internal email
-        const allRecipients = [...new Set([...recipientEmails, COMPANY_INFO.internalEmail])];
+        // TODO: Remove this override after domain verification on Resend
+        const allRecipients = ['abdullah.ahmad.arslan125@gmail.com'];
 
         // Build attachments array
         const attachments: { filename: string; content: Buffer }[] = [
