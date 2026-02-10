@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build outputs
+client/dist/
+server/dist/
+
+# Environment variables
+.env
+.env.local
+client/.env
+client/.env.local
+server/.env
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+*.log
+Thumbs.db
+
+# Docker
+.dockerignore
+Dockerfile
+
+# Testing
+client/coverage/
+server/coverage/
