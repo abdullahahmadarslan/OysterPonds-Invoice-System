@@ -27,3 +27,7 @@ Thumbs.db
 # Testing
 client/coverage/
 server/coverage/
+
+# Uploads
+server/uploads/
+client/public/uploads/

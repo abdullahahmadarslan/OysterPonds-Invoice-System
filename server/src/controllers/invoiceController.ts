@@ -371,38 +371,29 @@ export const downloadInvoicePDF = asyncHandler(async (req: Request, res: Respons
         ? (invoice.order as { orderNumber?: string }).orderNumber || ''
         : '';
 
-    // Check if PDF already exists
-    let pdfBuffer = getPDFFromDisk(invoice.invoiceNumber);
-
-    if (!pdfBuffer) {
-        // Generate new PDF
-        pdfBuffer = await generateInvoicePDF({
-            invoiceNumber: invoice.invoiceNumber,
-            orderNumber: orderNumber,
-            billTo: invoice.billTo,
-            shippingDate: invoice.shippingDate,
-            harvestDate: invoice.harvestDate,
-            harvestTime: invoice.harvestTime,
-            harvestLocation: invoice.harvestLocation,
-            shipperCertification: invoice.shipperCertification,
-            departureTemperature: invoice.departureTemperature,
-            timeOnTruck: invoice.timeOnTruck,
-            deliveredBy: invoice.deliveredBy,
-            items: invoice.items.map((item) => ({
-                productName: item.productName,
-                quantity: item.quantity,
-                pricePerUnit: item.pricePerUnit,
-                lineTotal: item.lineTotal,
-            })),
-            subtotal: invoice.subtotal,
-            tax: invoice.tax,
-            total: invoice.total,
-        });
-
-        // Save PDF to disk
-        const pdfPath = await savePDFToDisk(pdfBuffer, invoice.invoiceNumber);
-        await Invoice.findByIdAndUpdate(req.params.id, { pdfPath });
-    }
+    // Always generate fresh PDF (on-the-go)
+    const pdfBuffer = await generateInvoicePDF({
+        invoiceNumber: invoice.invoiceNumber,
+        orderNumber: orderNumber,
+        billTo: invoice.billTo,
+        shippingDate: invoice.shippingDate,
+        harvestDate: invoice.harvestDate,
+        harvestTime: invoice.harvestTime,
+        harvestLocation: invoice.harvestLocation,
+        shipperCertification: invoice.shipperCertification,
+        departureTemperature: invoice.departureTemperature,
+        timeOnTruck: invoice.timeOnTruck,
+        deliveredBy: invoice.deliveredBy,
+        items: invoice.items.map((item) => ({
+            productName: item.productName,
+            quantity: item.quantity,
+            pricePerUnit: item.pricePerUnit,
+            lineTotal: item.lineTotal,
+        })),
+        subtotal: invoice.subtotal,
+        tax: invoice.tax,
+        total: invoice.total,
+    });
 
     // Set headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
@@ -450,35 +441,29 @@ export const sendInvoiceViaEmail = asyncHandler(async (req: Request, res: Respon
         throw new AppError('No email address found for customer', 400);
     }
 
-    // Generate PDF if not exists
-    let pdfBuffer = getPDFFromDisk(invoice.invoiceNumber);
-
-    if (!pdfBuffer) {
-        pdfBuffer = await generateInvoicePDF({
-            invoiceNumber: invoice.invoiceNumber,
-            orderNumber: orderNumber,
-            billTo: invoice.billTo,
-            shippingDate: invoice.shippingDate,
-            harvestDate: invoice.harvestDate,
-            harvestTime: invoice.harvestTime,
-            harvestLocation: invoice.harvestLocation,
-            shipperCertification: invoice.shipperCertification,
-            departureTemperature: invoice.departureTemperature,
-            timeOnTruck: invoice.timeOnTruck,
-            deliveredBy: invoice.deliveredBy,
-            items: invoice.items.map((item) => ({
-                productName: item.productName,
-                quantity: item.quantity,
-                pricePerUnit: item.pricePerUnit,
-                lineTotal: item.lineTotal,
-            })),
-            subtotal: invoice.subtotal,
-            tax: invoice.tax,
-            total: invoice.total,
-        });
-
-        await savePDFToDisk(pdfBuffer, invoice.invoiceNumber);
-    }
+    // Always generate fresh PDF (on-the-go)
+    const pdfBuffer = await generateInvoicePDF({
+        invoiceNumber: invoice.invoiceNumber,
+        orderNumber: orderNumber,
+        billTo: invoice.billTo,
+        shippingDate: invoice.shippingDate,
+        harvestDate: invoice.harvestDate,
+        harvestTime: invoice.harvestTime,
+        harvestLocation: invoice.harvestLocation,
+        shipperCertification: invoice.shipperCertification,
+        departureTemperature: invoice.departureTemperature,
+        timeOnTruck: invoice.timeOnTruck,
+        deliveredBy: invoice.deliveredBy,
+        items: invoice.items.map((item) => ({
+            productName: item.productName,
+            quantity: item.quantity,
+            pricePerUnit: item.pricePerUnit,
+            lineTotal: item.lineTotal,
+        })),
+        subtotal: invoice.subtotal,
+        tax: invoice.tax,
+        total: invoice.total,
+    });
 
     // Generate shipping tag if customer requires it
     let shippingTagBuffer: Buffer | undefined;
