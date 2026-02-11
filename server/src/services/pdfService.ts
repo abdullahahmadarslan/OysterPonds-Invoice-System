@@ -2,9 +2,6 @@ import puppeteer from 'puppeteer';
 import path from 'path';
 import fs from 'fs';
 
-// Use process.cwd() for reliability across different module systems
-const getUploadsDir = (): string => path.join(process.cwd(), 'uploads', 'invoices');
-
 // Load logo as base64 data URL
 const getLogoBase64 = (): string => {
     try {
@@ -453,38 +450,6 @@ export const generateInvoicePDF = async (invoiceData: InvoiceData): Promise<Buff
     } finally {
         await browser.close();
     }
-};
-
-// Save PDF to disk
-export const savePDFToDisk = async (
-    pdfBuffer: Buffer,
-    invoiceNumber: string
-): Promise<string> => {
-    const uploadsDir = getUploadsDir();
-
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    const filename = `${invoiceNumber}.pdf`;
-    const filepath = path.join(uploadsDir, filename);
-
-    fs.writeFileSync(filepath, pdfBuffer);
-
-    return filepath;
-};
-
-// Get PDF from disk
-export const getPDFFromDisk = (invoiceNumber: string): Buffer | null => {
-    const uploadsDir = getUploadsDir();
-    const filepath = path.join(uploadsDir, `${invoiceNumber}.pdf`);
-
-    if (fs.existsSync(filepath)) {
-        return fs.readFileSync(filepath);
-    }
-
-    return null;
 };
 
 // Shipping Tag Data Interface

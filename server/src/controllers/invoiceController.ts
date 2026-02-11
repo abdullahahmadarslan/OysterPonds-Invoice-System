@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Invoice, Order, Customer } from '../models/index.js';
 import { asyncHandler, AppError } from '../middleware/index.js';
 import { ApiResponse } from '../types/index.js';
-import { generateInvoicePDF, savePDFToDisk, getPDFFromDisk, generateShippingTagPDF } from '../services/pdfService.js';
+import { generateInvoicePDF, generateShippingTagPDF } from '../services/pdfService.js';
 import { sendInvoiceEmail } from '../services/emailService.js';
 
 // Counter for invoice numbers (starting from 16000 as per client request)
